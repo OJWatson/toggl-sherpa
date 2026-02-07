@@ -18,6 +18,20 @@ uv run toggl-sherpa log stop
 
 Data is stored in SQLite under `XDG_DATA_HOME/toggl-sherpa/toggl-sherpa.sqlite3` by default.
 
+## Milestone 2 (M2): Chrome active-tab evidence (extension + localhost)
+
+1) Start the ingest server:
+
+```bash
+# Allow storing full URL+title only for these domains; everything else is redacted.
+export TOGGL_SHERPA_TAB_ALLOWLIST="github.com,docs.python.org"
+uv run toggl-sherpa web tab-server --port 5055
+```
+
+2) Load the extension (Chrome): `chrome://extensions` → enable *Developer mode* → *Load unpacked* → select `./extension/`.
+
+The extension will POST the active tab URL/title to `http://127.0.0.1:5055/v1/active_tab` periodically and on tab/window changes.
+
 ## Dev
 
 ```bash

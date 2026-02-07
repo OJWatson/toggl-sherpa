@@ -17,10 +17,13 @@ from toggl_sherpa.m1.daemon import (
 from toggl_sherpa.m1.gnome import GnomeShellEvalError, get_focus_sample
 from toggl_sherpa.m1.logger import insert_sample
 from toggl_sherpa.m1.paths import default_db_path, pidfile_path
+from toggl_sherpa.m2.tab_server import serve as serve_tab_ingest
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 log_app = typer.Typer(add_completion=False, no_args_is_help=True)
+web_app = typer.Typer(add_completion=False, no_args_is_help=True)
 app.add_typer(log_app, name="log")
+app.add_typer(web_app, name="web")
 
 
 @app.callback()
@@ -101,6 +104,23 @@ def log_status() -> None:
     else:
         typer.echo(f"stopped pidfile={pf}")
         raise typer.Exit(code=1)
+
+
+@web_app.command("tab-server")
+def web_tab_server(
+    db: Path = typer.Option(default_db_path, "--db", help="SQLite DB path"),  # noqa: B008
+    host: str = typer.Option("127.0.0.1", "--host", help="Bind host"),  # noqa: B008
+    port: int = typer.Option(5055, "--port", help="Bind port"),  # noqa: B008
+    allowlist: str = typer.Option(
+        "",
+        "--allowlist",
+        help="Comma-separated host/domain allowlist (stores full URL+title only for allowed hosts)",
+        envvar="TOGGL_SHERPA_TAB_ALLOWLIST",
+    ),  # noqa: B008
+) -> None:
+    """Run a localhost HTTP server to ingest active tab events from the Chrome extension."""
+    typer.echo(f"tab ingest server listening on http://{host}:{port} (db={db})")
+    serve_tab_ingest(db_path=db, host=host, port=port, allowlist=allowlist or None)
 
 
 def main() -> None:

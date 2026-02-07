@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "toggl-sherpa tab logger",
+  "version": "0.1.0",
+  "description": "Sends active tab URL/title to toggl-sherpa localhost for timesheet evidence.",
+  "permissions": ["tabs", "alarms"],
+  "host_permissions": ["http://127.0.0.1:5055/*", "http://localhost:5055/*"],
+  "background": {
+    "service_worker": "service_worker.js",
+    "type": "module"
+  }
+}
