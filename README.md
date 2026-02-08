@@ -70,6 +70,15 @@ uv run toggl-sherpa apply --reviewed reviewed_timesheet.json
 export TOGGL_API_TOKEN=...            # your API token
 export TOGGL_WORKSPACE_ID=123456
 uv run toggl-sherpa apply --reviewed reviewed_timesheet.json --yes
+
+# Optional mapping config (project_suggestion -> project_id; tag normalisation):
+# ~/.config/toggl-sherpa/config.json
+# {
+#   "project_ids": {"dev": 12345},
+#   "tag_map": {"Code": "code"}
+# }
+# Or pass explicitly:
+# uv run toggl-sherpa apply --reviewed reviewed_timesheet.json --yes --config /path/to/config.json
 ```
 
 ## Dev

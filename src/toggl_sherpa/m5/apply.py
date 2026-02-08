@@ -49,17 +49,32 @@ def _load_blocks(path: Path) -> list[TimesheetBlock]:
     return blocks
 
 
-def build_plan(blocks: list[TimesheetBlock]) -> list[ApplyPlanItem]:
+def build_plan(
+    blocks: list[TimesheetBlock],
+    *,
+    project_ids: dict[str, int] | None = None,
+    tag_map: dict[str, str] | None = None,
+) -> list[ApplyPlanItem]:
+    project_ids = project_ids or {}
+    tag_map = tag_map or {}
+
     plan: list[ApplyPlanItem] = []
     for b in blocks:
-        tags = list(b.tags_suggestion)
-        proj_id = None
-        # For M5 we keep mapping optional; embed suggestions in description.
+        tags = [tag_map.get(t, t) for t in list(b.tags_suggestion)]
+        # Drop blanks + de-dupe while preserving order.
+        tags_out: list[str] = []
+        for t in tags:
+            tt = t.strip()
+            if tt and tt not in tags_out:
+                tags_out.append(tt)
+
+        proj_id = project_ids.get(b.project_suggestion) if b.project_suggestion else None
+
         desc_parts = [b.label]
         if b.project_suggestion:
             desc_parts.append(f"[proj:{b.project_suggestion}]")
-        if tags:
-            desc_parts.append(f"[tags:{','.join(tags)}]")
+        if tags_out:
+            desc_parts.append(f"[tags:{','.join(tags_out)}]")
         description = " ".join(desc_parts)
 
         plan.append(
@@ -67,7 +82,7 @@ def build_plan(blocks: list[TimesheetBlock]) -> list[ApplyPlanItem]:
                 start=b.start_ts_utc,
                 stop=b.end_ts_utc,
                 description=description,
-                tags=tags,
+                tags=tags_out,
                 project_id=proj_id,
             )
         )

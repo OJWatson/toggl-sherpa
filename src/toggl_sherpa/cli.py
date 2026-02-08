@@ -30,6 +30,7 @@ from toggl_sherpa.m5.apply import (
     load_config_from_env,
     print_plan,
 )
+from toggl_sherpa.m6.config import load_mapping
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 log_app = typer.Typer(add_completion=False, no_args_is_help=True)
@@ -257,6 +258,11 @@ def apply(
         "--reviewed",
         help="Reviewed blocks JSON file (from `toggl-sherpa report review`)",
     ),  # noqa: B008
+    config: str = typer.Option(
+        "",
+        "--config",
+        help="Optional config.json for project/tag mapping (default: XDG config path)",
+    ),  # noqa: B008
     dry_run: bool = typer.Option(
         True,
         "--dry-run/--no-dry-run",
@@ -291,7 +297,8 @@ def apply(
         raise typer.Exit(code=2)
 
     blocks = _load_blocks(Path(reviewed))
-    plan = build_plan(blocks)
+    mapping = load_mapping(Path(config) if config else None)
+    plan = build_plan(blocks, project_ids=mapping.project_ids, tag_map=mapping.tag_map)
     print_plan(plan)
 
     if dry_run:
