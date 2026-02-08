@@ -1,7 +1,0 @@
-{
-  "project": "toggl-sherpa",
-  "milestone": "M4",
-  "state": "running",
-  "updatedAtUtc": "2026-02-08T12:59:04Z",
-  "note": "M4 interactive review workflow wired end-to-end: report review -> report merge -> report apply (CSV export). Added happy-path integration test. Next blocker: push commit ebb0dbc and confirm CI green."
-}
