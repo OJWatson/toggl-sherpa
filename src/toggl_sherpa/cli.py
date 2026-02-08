@@ -21,6 +21,7 @@ from toggl_sherpa.m2.tab_server import serve as serve_tab_ingest
 from toggl_sherpa.m3.query import day_bounds_utc, fetch_samples, fetch_tab_events, to_jsonable
 from toggl_sherpa.m3.report import blocks_to_markdown
 from toggl_sherpa.m3.summarise import summarise_blocks
+from toggl_sherpa.m4.review import interactive_review, write_reviewed_json
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 log_app = typer.Typer(add_completion=False, no_args_is_help=True)
@@ -167,6 +168,38 @@ def report_draft_timesheet(
         raise typer.Exit(code=2)
 
     typer.echo(blocks_to_markdown(blocks))
+
+
+@report_app.command("review")
+def report_review(
+    date: str = typer.Option(
+        ..., "--date", help="UTC date (YYYY-MM-DD) to summarise"
+    ),
+    db: Path = typer.Option(default_db_path, "--db", help="SQLite DB path"),  # noqa: B008
+    out: str = typer.Option(
+        "reviewed_timesheet.json",
+        "--out",
+        help="Where to write reviewed blocks JSON",
+    ),  # noqa: B008
+    idle_threshold_ms: int = typer.Option(
+        60_000,
+        "--idle-threshold-ms",
+        help="Treat samples as idle if idle_ms >= this",
+    ),
+) -> None:
+    """Interactively review blocks and write an accepted/edited JSON file."""
+    start_ts, end_ts = day_bounds_utc(date)
+    conn = db_mod.connect(db)
+    try:
+        samples = fetch_samples(conn, start_ts, end_ts)
+        tabs = fetch_tab_events(conn, start_ts, end_ts)
+    finally:
+        conn.close()
+
+    blocks = summarise_blocks(samples, tabs, idle_threshold_ms=idle_threshold_ms)
+    reviewed = interactive_review(blocks)
+    write_reviewed_json(out, reviewed)
+    typer.echo(f"wrote {out} ({len(reviewed)} accepted block(s))")
 
 
 def main() -> None:
