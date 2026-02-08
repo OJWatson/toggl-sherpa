@@ -21,6 +21,7 @@ from toggl_sherpa.m2.tab_server import serve as serve_tab_ingest
 from toggl_sherpa.m3.query import day_bounds_utc, fetch_samples, fetch_tab_events, to_jsonable
 from toggl_sherpa.m3.report import blocks_to_markdown
 from toggl_sherpa.m3.summarise import summarise_blocks
+from toggl_sherpa.m4.apply import load_blocks_json, merge_adjacent_blocks, write_toggl_csv
 from toggl_sherpa.m4.review import interactive_review, write_reviewed_json
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
@@ -200,6 +201,46 @@ def report_review(
     reviewed = interactive_review(blocks)
     write_reviewed_json(out, reviewed)
     typer.echo(f"wrote {out} ({len(reviewed)} accepted block(s))")
+
+
+@report_app.command("merge")
+def report_merge(
+    in_path: str = typer.Option(
+        ..., "--in", help="Input reviewed blocks JSON (from report review)"
+    ),
+    out: str = typer.Option(
+        "merged_timesheet.json",
+        "--out",
+        help="Where to write merged blocks JSON",
+    ),  # noqa: B008
+    gap_seconds: int = typer.Option(
+        60,
+        "--gap-seconds",
+        help="Merge blocks if gap between them <= this (and label/project/tags match)",
+    ),
+) -> None:
+    """Merge adjacent reviewed blocks into longer runs."""
+    blocks = load_blocks_json(in_path)
+    merged = merge_adjacent_blocks(blocks, gap_seconds=gap_seconds)
+    write_reviewed_json(out, merged)
+    typer.echo(f"wrote {out} ({len(merged)} block(s))")
+
+
+@report_app.command("apply")
+def report_apply(
+    in_path: str = typer.Option(
+        ..., "--in", help="Input blocks JSON (typically from report merge)"
+    ),
+    out: str = typer.Option(
+        "toggl_import.csv",
+        "--out",
+        help="Where to write Toggl Track CSV import",
+    ),  # noqa: B008
+) -> None:
+    """Convert approved blocks to a Toggl Track CSV import file."""
+    blocks = load_blocks_json(in_path)
+    write_toggl_csv(out, blocks)
+    typer.echo(f"wrote {out} ({len(blocks)} row(s))")
 
 
 def main() -> None:

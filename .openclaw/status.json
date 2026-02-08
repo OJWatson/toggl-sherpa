@@ -2,6 +2,6 @@
   "project": "toggl-sherpa",
   "milestone": "M4",
   "state": "running",
-  "updatedAtUtc": "2026-02-08T08:51:32Z",
-  "note": "starting interactive review workflow"
+  "updatedAtUtc": "2026-02-08T12:58:05Z",
+  "note": "CI is green. M4 target: complete interactive review workflow end-to-end + add at least 1 integration test for happy path + update docs. Orchestrator nudge delivery initially timed out/hung; retry running in background (session sharp-lagoon)."
 }

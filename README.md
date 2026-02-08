@@ -42,10 +42,22 @@ uv run toggl-sherpa report draft-timesheet --date 2026-02-08
 uv run toggl-sherpa report draft-timesheet --date 2026-02-08 --format json
 ```
 
-Interactive review (writes reviewed blocks to JSON):
+Interactive review (writes approved blocks to JSON):
 
 ```bash
 uv run toggl-sherpa report review --date 2026-02-08 --out reviewed_timesheet.json
+```
+
+Merge adjacent approved blocks (optional but recommended):
+
+```bash
+uv run toggl-sherpa report merge --in reviewed_timesheet.json --out merged_timesheet.json
+```
+
+Apply (generate a Toggl Track CSV import file):
+
+```bash
+uv run toggl-sherpa report apply --in merged_timesheet.json --out toggl_import.csv
 ```
 
 ## Dev
