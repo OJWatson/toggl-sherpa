@@ -32,6 +32,16 @@ uv run toggl-sherpa web tab-server --port 5055
 
 The extension will POST the active tab URL/title to `http://127.0.0.1:5055/v1/active_tab` periodically and on tab/window changes.
 
+## Milestone 3 (M3): Draft timesheet + evidence + suggestions
+
+Generate a draft report for a UTC day:
+
+```bash
+uv run toggl-sherpa report draft-timesheet --date 2026-02-08
+# or JSON:
+uv run toggl-sherpa report draft-timesheet --date 2026-02-08 --format json
+```
+
 ## Dev
 
 ```bash

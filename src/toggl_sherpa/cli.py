@@ -18,12 +18,17 @@ from toggl_sherpa.m1.gnome import GnomeShellEvalError, get_focus_sample
 from toggl_sherpa.m1.logger import insert_sample
 from toggl_sherpa.m1.paths import default_db_path, pidfile_path
 from toggl_sherpa.m2.tab_server import serve as serve_tab_ingest
+from toggl_sherpa.m3.query import day_bounds_utc, fetch_samples, fetch_tab_events, to_jsonable
+from toggl_sherpa.m3.report import blocks_to_markdown
+from toggl_sherpa.m3.summarise import summarise_blocks
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 log_app = typer.Typer(add_completion=False, no_args_is_help=True)
 web_app = typer.Typer(add_completion=False, no_args_is_help=True)
+report_app = typer.Typer(add_completion=False, no_args_is_help=True)
 app.add_typer(log_app, name="log")
 app.add_typer(web_app, name="web")
+app.add_typer(report_app, name="report")
 
 
 @app.callback()
@@ -121,6 +126,47 @@ def web_tab_server(
     """Run a localhost HTTP server to ingest active tab events from the Chrome extension."""
     typer.echo(f"tab ingest server listening on http://{host}:{port} (db={db})")
     serve_tab_ingest(db_path=db, host=host, port=port, allowlist=allowlist or None)
+
+
+@report_app.command("draft-timesheet")
+def report_draft_timesheet(
+    date: str = typer.Option(
+        ..., "--date", help="UTC date (YYYY-MM-DD) to summarise"
+    ),
+    db: Path = typer.Option(default_db_path, "--db", help="SQLite DB path"),  # noqa: B008
+    format: str = typer.Option(
+        "md",
+        "--format",
+        help="Output format: md|json",
+    ),
+    idle_threshold_ms: int = typer.Option(
+        60_000,
+        "--idle-threshold-ms",
+        help="Treat samples as idle if idle_ms >= this",
+    ),
+) -> None:
+    """Generate a draft timesheet + evidence report for one UTC day."""
+    start_ts, end_ts = day_bounds_utc(date)
+    conn = db_mod.connect(db)
+    try:
+        samples = fetch_samples(conn, start_ts, end_ts)
+        tabs = fetch_tab_events(conn, start_ts, end_ts)
+    finally:
+        conn.close()
+
+    blocks = summarise_blocks(samples, tabs, idle_threshold_ms=idle_threshold_ms)
+
+    if format == "json":
+        import json
+
+        typer.echo(json.dumps(to_jsonable(blocks), ensure_ascii=False, indent=2))
+        return
+
+    if format != "md":
+        typer.echo("format must be md or json")
+        raise typer.Exit(code=2)
+
+    typer.echo(blocks_to_markdown(blocks))
 
 
 def main() -> None:
