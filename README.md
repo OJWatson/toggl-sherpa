@@ -60,6 +60,18 @@ Apply (generate a Toggl Track CSV import file):
 uv run toggl-sherpa report apply --in merged_timesheet.json --out toggl_import.csv
 ```
 
+## Milestone 5 (M5): Apply to Toggl Track (explicit approval gate)
+
+```bash
+# Dry run (default)
+uv run toggl-sherpa apply --reviewed reviewed_timesheet.json
+
+# Actually create entries in Toggl Track
+export TOGGL_API_TOKEN=...            # your API token
+export TOGGL_WORKSPACE_ID=123456
+uv run toggl-sherpa apply --reviewed reviewed_timesheet.json --yes
+```
+
 ## Dev
 
 ```bash

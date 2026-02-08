@@ -23,6 +23,13 @@ from toggl_sherpa.m3.report import blocks_to_markdown
 from toggl_sherpa.m3.summarise import summarise_blocks
 from toggl_sherpa.m4.apply import load_blocks_json, merge_adjacent_blocks, write_toggl_csv
 from toggl_sherpa.m4.review import interactive_review, write_reviewed_json
+from toggl_sherpa.m5.apply import (
+    _load_blocks,
+    apply_plan,
+    build_plan,
+    load_config_from_env,
+    print_plan,
+)
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 log_app = typer.Typer(add_completion=False, no_args_is_help=True)
@@ -241,6 +248,49 @@ def report_apply(
     blocks = load_blocks_json(in_path)
     write_toggl_csv(out, blocks)
     typer.echo(f"wrote {out} ({len(blocks)} row(s))")
+
+
+@app.command("apply")
+def apply(
+    reviewed: str = typer.Option(
+        "reviewed_timesheet.json",
+        "--reviewed",
+        help="Reviewed blocks JSON file (from `toggl-sherpa report review`)",
+    ),  # noqa: B008
+    dry_run: bool = typer.Option(
+        True,
+        "--dry-run/--no-dry-run",
+        help="Dry-run (prints what would be created; default)",
+    ),  # noqa: B008
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        help="Actually create entries in Toggl (explicit approval gate)",
+    ),  # noqa: B008
+) -> None:
+    """Apply reviewed blocks to Toggl Track.
+
+    Refuses to create anything unless `--yes` is provided.
+    """
+
+    if yes:
+        dry_run = False
+
+    if not dry_run and not yes:
+        typer.echo("refusing: pass --yes to create entries")
+        raise typer.Exit(code=2)
+
+    blocks = _load_blocks(Path(reviewed))
+    plan = build_plan(blocks)
+    print_plan(plan)
+
+    if dry_run:
+        typer.echo("dry-run: not creating anything")
+        return
+
+    cfg = load_config_from_env()
+    created = apply_plan(plan, cfg)
+    typer.echo(f"created {len(created)} time entr(y/ies)")
 
 
 def main() -> None:
