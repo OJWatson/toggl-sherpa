@@ -43,6 +43,7 @@ def test_apply_refuses_without_yes(tmp_path: Path) -> None:
 
 
 def test_apply_yes_posts_with_mock(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     reviewed = tmp_path / "reviewed.json"
     reviewed.write_text(
         json.dumps(

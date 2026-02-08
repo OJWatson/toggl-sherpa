@@ -267,6 +267,16 @@ def apply(
         "--yes",
         help="Actually create entries in Toggl (explicit approval gate)",
     ),  # noqa: B008
+    ledger_db: str = typer.Option(
+        "",
+        "--ledger-db",
+        help="SQLite DB used for local idempotency ledger (default: main DB)",
+    ),  # noqa: B008
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Disable idempotency checks (re-post even if already applied)",
+    ),  # noqa: B008
 ) -> None:
     """Apply reviewed blocks to Toggl Track.
 
@@ -289,7 +299,8 @@ def apply(
         return
 
     cfg = load_config_from_env()
-    created = apply_plan(plan, cfg)
+    ledger_path = Path(ledger_db) if ledger_db else default_db_path()
+    created = apply_plan(plan, cfg, ledger_db_path=ledger_path, force=force)
     typer.echo(f"created {len(created)} time entr(y/ies)")
 
 

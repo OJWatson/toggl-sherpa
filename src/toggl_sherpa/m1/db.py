@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 def connect(db_path: Path, *, check_same_thread: bool = True) -> sqlite3.Connection:
@@ -82,6 +82,29 @@ def _migrate(conn: sqlite3.Connection) -> None:
             "CREATE INDEX IF NOT EXISTS idx_tab_events_sample_id ON tab_events(sample_id)"
         )
         version = 2
+
+    # v3: applied ledger for idempotent Toggl API writes
+    if version < 3:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS applied_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ts_utc TEXT NOT NULL,
+                fingerprint TEXT NOT NULL UNIQUE,
+                start_ts_utc TEXT NOT NULL,
+                end_ts_utc TEXT NOT NULL,
+                description TEXT NOT NULL,
+                toggl_time_entry_id INTEGER
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_applied_entries_ts
+            ON applied_entries(ts_utc)
+            """
+        )
+        version = 3
 
     conn.execute(
         "UPDATE meta SET value=? WHERE key='schema_version'",

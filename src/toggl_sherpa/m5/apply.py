@@ -7,8 +7,14 @@ from pathlib import Path
 
 import typer
 
+from toggl_sherpa.m1 import db as db_mod
 from toggl_sherpa.m3.model import TimesheetBlock
 from toggl_sherpa.m5.toggl_api import TogglConfig, create_time_entry
+from toggl_sherpa.m6.idempotency import (
+    already_applied,
+    fingerprint,
+    record_applied,
+)
 
 
 @dataclass(frozen=True)
@@ -89,11 +95,27 @@ def load_config_from_env() -> TogglConfig:
     return TogglConfig(api_token=tok, workspace_id=wid_i)
 
 
-def apply_plan(plan: list[ApplyPlanItem], cfg: TogglConfig) -> list[dict]:
-    created: list[dict] = []
-    for p in plan:
-        created.append(
-            create_time_entry(
+def apply_plan(
+    plan: list[ApplyPlanItem],
+    cfg: TogglConfig,
+    *,
+    ledger_db_path: Path,
+    force: bool = False,
+) -> list[dict]:
+    """Apply plan to Toggl, with local idempotency ledger.
+
+    If `force` is False, will skip any item already present in the ledger.
+    """
+
+    conn = db_mod.connect(ledger_db_path)
+    try:
+        created: list[dict] = []
+        for p in plan:
+            fp = fingerprint(start=p.start, stop=p.stop, description=p.description)
+            if not force and already_applied(conn, fp):
+                continue
+
+            resp = create_time_entry(
                 cfg,
                 start=p.start,
                 stop=p.stop,
@@ -101,5 +123,18 @@ def apply_plan(plan: list[ApplyPlanItem], cfg: TogglConfig) -> list[dict]:
                 tags=p.tags or None,
                 project_id=p.project_id,
             )
-        )
+            created.append(resp)
+
+            te_id = resp.get("id") if isinstance(resp, dict) else None
+            record_applied(
+                conn,
+                fp=fp,
+                start=p.start,
+                stop=p.stop,
+                description=p.description,
+                toggl_time_entry_id=(int(te_id) if te_id is not None else None),
+            )
+    finally:
+        conn.close()
+
     return created
