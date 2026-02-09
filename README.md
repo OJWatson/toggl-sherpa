@@ -101,6 +101,9 @@ Audit commands:
 # List recently applied entries (most recent first)
 uv run toggl-sherpa ledger list --limit 20
 
+# Include fingerprints (useful for debugging idempotency)
+uv run toggl-sherpa ledger list --limit 20 --show-fingerprint
+
 # List entries applied since a UTC date
 uv run toggl-sherpa ledger list --since 2026-02-09 --limit 200
 
