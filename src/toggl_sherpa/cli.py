@@ -353,6 +353,11 @@ def day(
         "--idle-threshold-ms",
         help="Treat samples as idle if idle_ms >= this",
     ),  # noqa: B008
+    out_dir: str = typer.Option(
+        "",
+        "--out-dir",
+        help="Directory to write default outputs into (default: current directory)",
+    ),  # noqa: B008
     merge: bool = typer.Option(
         False,
         "--merge",
@@ -412,7 +417,12 @@ def day(
     if merge:
         reviewed = merge_adjacent_blocks(reviewed, gap_seconds=merge_gap_seconds)
 
-    out_path = out or f"reviewed_{date}.json"
+    if out:
+        out_path = out
+    else:
+        fname = f"reviewed_{date}.json"
+        out_path = str(Path(out_dir) / fname) if out_dir else fname
+
     write_reviewed_json(out_path, reviewed)
     typer.echo(f"wrote {out_path} ({len(reviewed)} accepted block(s))")
 

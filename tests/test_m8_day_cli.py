@@ -51,6 +51,33 @@ def test_day_dry_run_accept_all_writes_reviewed_default_name(tmp_path: Path) -> 
         assert "dry-run" in res.stdout
 
 
+def test_day_out_dir_writes_into_dir(tmp_path: Path) -> None:
+    db_path = tmp_path / "test.sqlite"
+    _seed_samples(db_path)
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        out_dir = Path("out")
+        out_dir.mkdir()
+        res = runner.invoke(
+            get_command(cli.app),
+            [
+                "day",
+                "--date",
+                "2026-02-09",
+                "--db",
+                str(db_path),
+                "--accept-all",
+                "--out-dir",
+                str(out_dir),
+            ],
+        )
+
+        assert res.exit_code == 0
+        assert (out_dir / "reviewed_2026-02-09.json").exists()
+        assert "wrote out/reviewed_2026-02-09.json" in res.stdout
+
+
 def test_day_yes_posts_with_mock(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     monkeypatch.setenv("TOGGL_API_TOKEN", "t")
