@@ -2,6 +2,27 @@
 
 Local activity logger + draft timesheet + approval gate for pushing entries to Toggl Track.
 
+## Quick start
+
+```bash
+# 1) (Optional) start background logger (GNOME)
+uv run toggl-sherpa log start --interval 10
+
+# 2) Generate a one-day plan (dry-run by default)
+uv run toggl-sherpa day --date 2026-02-09 --accept-all
+
+# 3) Inspect local idempotency ledger
+uv run toggl-sherpa ledger stats
+
+# 4) Interactive review with tidy artifacts
+uv run toggl-sherpa report review --date 2026-02-09 --out reviewed_timesheet.json --out-dir ./artifacts
+
+# To actually create entries in Toggl Track, you must pass --yes and set env:
+export TOGGL_API_TOKEN=...
+export TOGGL_WORKSPACE_ID=123456
+uv run toggl-sherpa apply --reviewed reviewed_timesheet.json --yes
+```
+
 ## Milestone 1 (M1): GNOME focus + idle logger
 
 Commands:
