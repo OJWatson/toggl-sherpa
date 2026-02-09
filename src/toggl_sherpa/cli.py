@@ -526,6 +526,15 @@ def config_show() -> None:
     typer.echo(f"TOGGL_API_TOKEN: {'set' if tok else 'missing'}")
     typer.echo(f"TOGGL_WORKSPACE_ID: {'set' if wid else 'missing'}")
 
+    if not tok:
+        typer.echo(
+            "hint: set TOGGL_API_TOKEN (Toggl Track → Profile settings → API token)"
+        )
+    if not wid:
+        typer.echo(
+            "hint: set TOGGL_WORKSPACE_ID (find in Toggl Track URL or via API; see README)"
+        )
+
 
 def main() -> None:
     app()

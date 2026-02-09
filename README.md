@@ -24,6 +24,11 @@ uv run toggl-sherpa apply --reviewed reviewed_timesheet.json --yes
 
 # Debug helper:
 uv run toggl-sherpa config show
+
+# Notes:
+# - TOGGL_API_TOKEN: Toggl Track web app → Profile settings → API token
+# - TOGGL_WORKSPACE_ID: the numeric workspace id (often visible in Toggl URLs),
+#   or fetch it via the API once you have a token.
 ```
 
 ## Milestone 1 (M1): GNOME focus + idle logger
