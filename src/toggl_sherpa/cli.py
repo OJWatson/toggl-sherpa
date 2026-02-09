@@ -31,14 +31,18 @@ from toggl_sherpa.m5.apply import (
     print_plan,
 )
 from toggl_sherpa.m6.config import load_mapping
+from toggl_sherpa.m6.ledger import list_applied
+from toggl_sherpa.m6.ledger import stats as ledger_stats
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 log_app = typer.Typer(add_completion=False, no_args_is_help=True)
 web_app = typer.Typer(add_completion=False, no_args_is_help=True)
 report_app = typer.Typer(add_completion=False, no_args_is_help=True)
+ledger_app = typer.Typer(add_completion=False, no_args_is_help=True)
 app.add_typer(log_app, name="log")
 app.add_typer(web_app, name="web")
 app.add_typer(report_app, name="report")
+app.add_typer(ledger_app, name="ledger")
 
 
 @app.callback()
@@ -326,6 +330,52 @@ def apply(
                 typer.echo(f"- {p.start} → {p.stop} | {p.description}")
             if len(skipped_items) > 20:
                 typer.echo(f"- … ({len(skipped_items) - 20} more)")
+
+
+@ledger_app.command("list")
+def ledger_list(
+    db: Path = typer.Option(default_db_path, "--db", help="SQLite DB path"),  # noqa: B008
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help="Only show entries applied since this UTC date (YYYY-MM-DD)",
+    ),
+    limit: int = typer.Option(50, "--limit", help="Max rows to show"),  # noqa: B008
+) -> None:
+    """List applied time entries (local idempotency ledger)."""
+    conn = db_mod.connect(db)
+    try:
+        rows = list_applied(conn, since=since, limit=limit)
+    finally:
+        conn.close()
+
+    for r in rows:
+        te_id = r.toggl_time_entry_id if r.toggl_time_entry_id is not None else "-"
+        typer.echo(
+            f"{r.ts_utc} | {r.start_ts_utc} → {r.end_ts_utc} | id={te_id} | {r.description}"
+        )
+
+
+@ledger_app.command("stats")
+def ledger_stats_cmd(
+    db: Path = typer.Option(default_db_path, "--db", help="SQLite DB path"),  # noqa: B008
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help="Only consider entries applied since this UTC date (YYYY-MM-DD)",
+    ),
+) -> None:
+    """Show summary stats for the local ledger."""
+    conn = db_mod.connect(db)
+    try:
+        s = ledger_stats(conn, since=since)
+    finally:
+        conn.close()
+
+    typer.echo(f"count: {s.count}")
+    typer.echo(f"min_ts_utc: {s.min_ts_utc or '-'}")
+    typer.echo(f"max_ts_utc: {s.max_ts_utc or '-'}")
+    typer.echo(f"unique_time_entry_ids: {s.unique_time_entry_ids}")
 
 
 def main() -> None:
