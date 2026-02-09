@@ -29,6 +29,10 @@ uv run toggl-sherpa config show
 # - TOGGL_API_TOKEN: Toggl Track web app → Profile settings → API token
 # - TOGGL_WORKSPACE_ID: the numeric workspace id (often visible in Toggl URLs),
 #   or fetch it via the API once you have a token.
+# - To discover workspace/project ids via the API:
+#   uv run toggl-sherpa toggl workspaces
+#   uv run toggl-sherpa toggl projects --workspace-id <id>
+#   uv run toggl-sherpa toggl tags --workspace-id <id>
 ```
 
 ## Milestone 1 (M1): GNOME focus + idle logger

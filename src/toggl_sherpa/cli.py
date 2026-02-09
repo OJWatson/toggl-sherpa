@@ -31,7 +31,7 @@ from toggl_sherpa.m5.apply import (
     load_config_from_env,
     print_plan,
 )
-from toggl_sherpa.m5.toggl_api import list_projects, list_workspaces
+from toggl_sherpa.m5.toggl_api import list_projects, list_tags, list_workspaces
 from toggl_sherpa.m6.config import default_config_path, load_mapping
 from toggl_sherpa.m6.ledger import list_applied
 from toggl_sherpa.m6.ledger import stats as ledger_stats
@@ -579,6 +579,29 @@ def toggl_projects(
         pid = p.get("id")
         name = p.get("name")
         typer.echo(f"{pid}\t{name}")
+
+
+@toggl_app.command("tags")
+def toggl_tags(
+    workspace_id: int = typer.Option(
+        ..., "--workspace-id", help="Toggl workspace id"
+    ),
+) -> None:
+    """List Toggl Track tags in a workspace (id + name)."""
+    tok = os.environ.get("TOGGL_API_TOKEN")
+    if not tok:
+        typer.echo("missing TOGGL_API_TOKEN")
+        raise typer.Exit(code=2)
+
+    tags = list_tags(api_token=tok, workspace_id=workspace_id)
+    if not tags:
+        typer.echo("(no tags found)")
+        return
+
+    for t in tags:
+        tid = t.get("id")
+        name = t.get("name")
+        typer.echo(f"{tid}\t{name}")
 
 
 def main() -> None:
