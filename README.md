@@ -62,6 +62,21 @@ uv run toggl-sherpa report apply --in merged_timesheet.json --out toggl_import.c
 
 ## Milestone 5 (M5): Apply to Toggl Track (explicit approval gate)
 
+### Milestone 8 (M8): One-shot day workflow
+
+```bash
+# Draft -> review -> plan (dry-run by default)
+uv run toggl-sherpa day --date 2026-02-09
+
+# Non-interactive (accept all blocks) and write reviewed JSON
+uv run toggl-sherpa day --date 2026-02-09 --accept-all --out reviewed_timesheet.json
+
+# Actually create entries (explicit approval gate)
+export TOGGL_API_TOKEN=...            # your API token
+export TOGGL_WORKSPACE_ID=123456
+uv run toggl-sherpa day --date 2026-02-09 --accept-all --yes
+```
+
 ### Idempotency ledger (what it is)
 
 When you run `toggl-sherpa apply --yes`, toggl-sherpa writes a local *applied ledger* into the same SQLite DB.
