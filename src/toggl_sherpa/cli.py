@@ -307,8 +307,10 @@ def apply(
 
     cfg = load_config_from_env()
     ledger_path = Path(ledger_db) if ledger_db else default_db_path()
-    created = apply_plan(plan, cfg, ledger_db_path=ledger_path, force=force)
+    created, skipped = apply_plan(plan, cfg, ledger_db_path=ledger_path, force=force)
     typer.echo(f"created {len(created)} time entr(y/ies)")
+    if skipped:
+        typer.echo(f"skipped {skipped} already-applied entr(y/ies)")
 
 
 def main() -> None:

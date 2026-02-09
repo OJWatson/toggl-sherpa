@@ -116,7 +116,7 @@ def apply_plan(
     *,
     ledger_db_path: Path,
     force: bool = False,
-) -> list[dict]:
+) -> tuple[list[dict], int]:
     """Apply plan to Toggl, with local idempotency ledger.
 
     If `force` is False, will skip any item already present in the ledger.
@@ -125,9 +125,11 @@ def apply_plan(
     conn = db_mod.connect(ledger_db_path)
     try:
         created: list[dict] = []
+        skipped = 0
         for p in plan:
             fp = fingerprint(start=p.start, stop=p.stop, description=p.description)
             if not force and already_applied(conn, fp):
+                skipped += 1
                 continue
 
             resp = create_time_entry(
@@ -152,4 +154,4 @@ def apply_plan(
     finally:
         conn.close()
 
-    return created
+    return created, skipped

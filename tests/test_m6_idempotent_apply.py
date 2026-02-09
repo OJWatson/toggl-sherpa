@@ -65,3 +65,4 @@ def test_apply_is_idempotent_by_default(monkeypatch, tmp_path: Path) -> None:
 
     # second run should not POST again
     assert len(calls) == 1
+    assert "skipped 1" in res2.stdout
