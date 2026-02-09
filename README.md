@@ -81,6 +81,9 @@ uv run toggl-sherpa day --date 2026-02-09 --idle-threshold-ms 120000
 # Merge adjacent identical blocks before writing/applying
 uv run toggl-sherpa day --date 2026-02-09 --merge --merge-gap-seconds 60
 
+# Keep artifacts tidy (write default reviewed_YYYY-MM-DD.json under a directory)
+uv run toggl-sherpa day --date 2026-02-09 --accept-all --out-dir ./artifacts
+
 # Actually create entries (explicit approval gate)
 export TOGGL_API_TOKEN=...            # your API token
 export TOGGL_WORKSPACE_ID=123456
