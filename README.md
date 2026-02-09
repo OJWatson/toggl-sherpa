@@ -68,8 +68,18 @@ uv run toggl-sherpa report apply --in merged_timesheet.json --out toggl_import.c
 # Draft -> review -> plan (dry-run by default)
 uv run toggl-sherpa day --date 2026-02-09
 
-# Non-interactive (accept all blocks) and write reviewed JSON
+# Non-interactive (accept all blocks)
+# If you omit --out, it writes reviewed_YYYY-MM-DD.json in the current directory.
+uv run toggl-sherpa day --date 2026-02-09 --accept-all
+
+# Custom reviewed JSON path
 uv run toggl-sherpa day --date 2026-02-09 --accept-all --out reviewed_timesheet.json
+
+# Drop very idle samples earlier/later
+uv run toggl-sherpa day --date 2026-02-09 --idle-threshold-ms 120000
+
+# Merge adjacent identical blocks before writing/applying
+uv run toggl-sherpa day --date 2026-02-09 --merge --merge-gap-seconds 60
 
 # Actually create entries (explicit approval gate)
 export TOGGL_API_TOKEN=...            # your API token
