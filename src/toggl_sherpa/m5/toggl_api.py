@@ -49,6 +49,29 @@ def list_workspaces(*, api_token: str) -> list[dict]:
     return [w for w in workspaces if isinstance(w, dict)]
 
 
+def list_projects(*, api_token: str, workspace_id: int) -> list[dict]:
+    """List projects for a workspace.
+
+    Returns raw project objects.
+    """
+
+    url = f"https://api.track.toggl.com/api/v9/workspaces/{workspace_id}/projects"
+    headers = {
+        "Authorization": _auth_header(api_token),
+        "Content-Type": "application/json",
+    }
+
+    resp = requests.get(url, headers=headers, timeout=30)
+    if resp.status_code >= 400:
+        raise TogglApiError(f"toggl api error {resp.status_code}: {resp.text}")
+
+    data = resp.json()
+    if not isinstance(data, list):
+        raise TogglApiError("unexpected response")
+
+    return [p for p in data if isinstance(p, dict)]
+
+
 def create_time_entry(
     cfg: TogglConfig,
     *,
