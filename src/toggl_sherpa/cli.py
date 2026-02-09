@@ -332,6 +332,91 @@ def apply(
                 typer.echo(f"- … ({len(skipped_items) - 20} more)")
 
 
+@app.command("day")
+def day(
+    date: str = typer.Option(
+        ..., "--date", help="UTC date (YYYY-MM-DD) to summarise"
+    ),
+    db: Path = typer.Option(default_db_path, "--db", help="SQLite DB path"),  # noqa: B008
+    out: str = typer.Option(
+        "reviewed_timesheet.json",
+        "--out",
+        help="Where to write reviewed blocks JSON",
+    ),  # noqa: B008
+    accept_all: bool = typer.Option(
+        False,
+        "--accept-all",
+        help="Accept all blocks without prompting (non-interactive)",
+    ),  # noqa: B008
+    config: str = typer.Option(
+        "",
+        "--config",
+        help="Optional config.json for project/tag mapping (default: XDG config path)",
+    ),  # noqa: B008
+    dry_run: bool = typer.Option(
+        True,
+        "--dry-run/--no-dry-run",
+        help="Dry-run (prints what would be created; default)",
+    ),  # noqa: B008
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        help="Actually create entries in Toggl (explicit approval gate)",
+    ),  # noqa: B008
+    ledger_db: str = typer.Option(
+        "",
+        "--ledger-db",
+        help="SQLite DB used for local idempotency ledger (default: main DB)",
+    ),  # noqa: B008
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Disable idempotency checks (re-post even if already applied)",
+    ),  # noqa: B008
+) -> None:
+    """One-shot day workflow: draft -> review -> (dry-run/apply)."""
+
+    if yes:
+        dry_run = False
+
+    if not dry_run and not yes:
+        typer.echo("refusing: pass --yes to create entries")
+        raise typer.Exit(code=2)
+
+    start_ts, end_ts = day_bounds_utc(date)
+    conn = db_mod.connect(db)
+    try:
+        samples = fetch_samples(conn, start_ts, end_ts)
+        tabs = fetch_tab_events(conn, start_ts, end_ts)
+    finally:
+        conn.close()
+
+    blocks = summarise_blocks(samples, tabs)
+    reviewed = blocks if accept_all else interactive_review(blocks)
+    write_reviewed_json(out, reviewed)
+    typer.echo(f"wrote {out} ({len(reviewed)} accepted block(s))")
+
+    mapping = load_mapping(Path(config) if config else None)
+    plan = build_plan(reviewed, project_ids=mapping.project_ids, tag_map=mapping.tag_map)
+    print_plan(plan)
+
+    if dry_run:
+        typer.echo("dry-run: not creating anything")
+        return
+
+    cfg = load_config_from_env()
+    ledger_path = Path(ledger_db) if ledger_db else default_db_path()
+    created, skipped, _skipped_items = apply_plan(
+        plan,
+        cfg,
+        ledger_db_path=ledger_path,
+        force=force,
+    )
+    typer.echo(f"created {len(created)} time entr(y/ies)")
+    if skipped:
+        typer.echo(f"skipped {skipped} already-applied entr(y/ies)")
+
+
 @ledger_app.command("list")
 def ledger_list(
     db: Path = typer.Option(default_db_path, "--db", help="SQLite DB path"),  # noqa: B008
