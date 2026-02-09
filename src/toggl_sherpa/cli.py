@@ -263,6 +263,11 @@ def apply(
         "--config",
         help="Optional config.json for project/tag mapping (default: XDG config path)",
     ),  # noqa: B008
+    explain_skips: bool = typer.Option(
+        False,
+        "--explain-skips",
+        help="Print the entries skipped due to idempotency",
+    ),  # noqa: B008
     dry_run: bool = typer.Option(
         True,
         "--dry-run/--no-dry-run",
@@ -307,10 +312,20 @@ def apply(
 
     cfg = load_config_from_env()
     ledger_path = Path(ledger_db) if ledger_db else default_db_path()
-    created, skipped = apply_plan(plan, cfg, ledger_db_path=ledger_path, force=force)
+    created, skipped, skipped_items = apply_plan(
+        plan,
+        cfg,
+        ledger_db_path=ledger_path,
+        force=force,
+    )
     typer.echo(f"created {len(created)} time entr(y/ies)")
     if skipped:
         typer.echo(f"skipped {skipped} already-applied entr(y/ies)")
+        if explain_skips:
+            for p in skipped_items[:20]:
+                typer.echo(f"- {p.start} → {p.stop} | {p.description}")
+            if len(skipped_items) > 20:
+                typer.echo(f"- … ({len(skipped_items) - 20} more)")
 
 
 def main() -> None:

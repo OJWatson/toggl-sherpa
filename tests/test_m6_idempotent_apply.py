@@ -59,10 +59,11 @@ def test_apply_is_idempotent_by_default(monkeypatch, tmp_path: Path) -> None:
 
     res2 = runner.invoke(
         get_command(cli.app),
-        ["apply", "--reviewed", str(reviewed), "--yes"],
+        ["apply", "--reviewed", str(reviewed), "--yes", "--explain-skips"],
     )
     assert res2.exit_code == 0
 
     # second run should not POST again
     assert len(calls) == 1
     assert "skipped 1" in res2.stdout
+    assert "code:X" in res2.stdout
