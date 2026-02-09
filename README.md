@@ -46,6 +46,9 @@ Interactive review (writes approved blocks to JSON):
 
 ```bash
 uv run toggl-sherpa report review --date 2026-02-08 --out reviewed_timesheet.json
+
+# Keep artifacts tidy
+uv run toggl-sherpa report review --date 2026-02-08 --out reviewed_timesheet.json --out-dir ./artifacts
 ```
 
 Merge adjacent approved blocks (optional but recommended):

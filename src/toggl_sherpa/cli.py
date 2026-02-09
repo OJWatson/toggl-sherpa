@@ -192,12 +192,15 @@ def report_review(
     out: str = typer.Option(
         "reviewed_timesheet.json",
         "--out",
-        help="Where to write reviewed blocks JSON",
+        help="Where to write reviewed blocks JSON (file name or full path)",
     ),  # noqa: B008
     out_dir: str = typer.Option(
         "",
         "--out-dir",
-        help="Directory to write outputs into (default: current directory)",
+        help=(
+            "Directory to write `--out` into when `--out` is a filename "
+            "(default: current directory)"
+        ),
     ),  # noqa: B008
     idle_threshold_ms: int = typer.Option(
         60_000,
