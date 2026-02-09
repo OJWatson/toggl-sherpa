@@ -23,6 +23,32 @@ def _auth_header(api_token: str) -> str:
     return f"Basic {b64}"
 
 
+def list_workspaces(*, api_token: str) -> list[dict]:
+    """List workspaces visible to the user.
+
+    Uses /api/v9/me and returns the raw workspace objects.
+    """
+
+    url = "https://api.track.toggl.com/api/v9/me"
+    headers = {
+        "Authorization": _auth_header(api_token),
+        "Content-Type": "application/json",
+    }
+
+    resp = requests.get(url, headers=headers, timeout=30)
+    if resp.status_code >= 400:
+        raise TogglApiError(f"toggl api error {resp.status_code}: {resp.text}")
+
+    data = resp.json()
+    if not isinstance(data, dict):
+        raise TogglApiError("unexpected response")
+
+    workspaces = data.get("workspaces")
+    if not isinstance(workspaces, list):
+        return []
+    return [w for w in workspaces if isinstance(w, dict)]
+
+
 def create_time_entry(
     cfg: TogglConfig,
     *,

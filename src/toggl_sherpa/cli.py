@@ -31,6 +31,7 @@ from toggl_sherpa.m5.apply import (
     load_config_from_env,
     print_plan,
 )
+from toggl_sherpa.m5.toggl_api import list_workspaces
 from toggl_sherpa.m6.config import default_config_path, load_mapping
 from toggl_sherpa.m6.ledger import list_applied
 from toggl_sherpa.m6.ledger import stats as ledger_stats
@@ -41,11 +42,13 @@ web_app = typer.Typer(add_completion=False, no_args_is_help=True)
 report_app = typer.Typer(add_completion=False, no_args_is_help=True)
 ledger_app = typer.Typer(add_completion=False, no_args_is_help=True)
 config_app = typer.Typer(add_completion=False, no_args_is_help=True)
+toggl_app = typer.Typer(add_completion=False, no_args_is_help=True)
 app.add_typer(log_app, name="log")
 app.add_typer(web_app, name="web")
 app.add_typer(report_app, name="report")
 app.add_typer(ledger_app, name="ledger")
 app.add_typer(config_app, name="config")
+app.add_typer(toggl_app, name="toggl")
 
 
 @app.callback()
@@ -534,6 +537,25 @@ def config_show() -> None:
         typer.echo(
             "hint: set TOGGL_WORKSPACE_ID (find in Toggl Track URL or via API; see README)"
         )
+
+
+@toggl_app.command("workspaces")
+def toggl_workspaces() -> None:
+    """List Toggl Track workspaces (id + name)."""
+    tok = os.environ.get("TOGGL_API_TOKEN")
+    if not tok:
+        typer.echo("missing TOGGL_API_TOKEN")
+        raise typer.Exit(code=2)
+
+    ws = list_workspaces(api_token=tok)
+    if not ws:
+        typer.echo("(no workspaces found)")
+        return
+
+    for w in ws:
+        wid = w.get("id")
+        name = w.get("name")
+        typer.echo(f"{wid}\t{name}")
 
 
 def main() -> None:
