@@ -194,6 +194,11 @@ def report_review(
         "--out",
         help="Where to write reviewed blocks JSON",
     ),  # noqa: B008
+    out_dir: str = typer.Option(
+        "",
+        "--out-dir",
+        help="Directory to write outputs into (default: current directory)",
+    ),  # noqa: B008
     idle_threshold_ms: int = typer.Option(
         60_000,
         "--idle-threshold-ms",
@@ -211,8 +216,10 @@ def report_review(
 
     blocks = summarise_blocks(samples, tabs, idle_threshold_ms=idle_threshold_ms)
     reviewed = interactive_review(blocks)
-    write_reviewed_json(out, reviewed)
-    typer.echo(f"wrote {out} ({len(reviewed)} accepted block(s))")
+
+    out_path = str(Path(out_dir) / out) if out_dir and Path(out).name == out else out
+    write_reviewed_json(out_path, reviewed)
+    typer.echo(f"wrote {out_path} ({len(reviewed)} accepted block(s))")
 
 
 @report_app.command("merge")
