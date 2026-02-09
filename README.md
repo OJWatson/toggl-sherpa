@@ -160,11 +160,23 @@ uv run toggl-sherpa apply --reviewed reviewed_timesheet.json --yes
 # Optional mapping config (project_suggestion -> project_id; tag normalisation):
 # ~/.config/toggl-sherpa/config.json
 # {
-#   "project_ids": {"dev": 12345},
-#   "tag_map": {"Code": "code"}
+#   "project_ids": {
+#     "dev": 12345,
+#     "admin": 67890
+#   },
+#   "tag_map": {
+#     "Code": "code",
+#     "Docs": "docs"
+#   }
 # }
+#
+# How to find ids:
+#   uv run toggl-sherpa toggl workspaces
+#   uv run toggl-sherpa toggl projects --workspace-id <id>
+#   uv run toggl-sherpa toggl tags --workspace-id <id>
+#
 # Or pass explicitly:
-# uv run toggl-sherpa apply --reviewed reviewed_timesheet.json --yes --config /path/to/config.json
+#   uv run toggl-sherpa apply --reviewed reviewed_timesheet.json --yes --config /path/to/config.json
 ```
 
 ## Dev
