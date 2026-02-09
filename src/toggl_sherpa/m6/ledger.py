@@ -17,6 +17,7 @@ class LedgerRow:
     end_ts_utc: str
     description: str
     toggl_time_entry_id: int | None
+    fingerprint: str
 
 
 def list_applied(
@@ -32,7 +33,7 @@ def list_applied(
         since_ts = _since_ts_utc(since)
         cur = conn.execute(
             """
-            SELECT ts_utc, start_ts_utc, end_ts_utc, description, toggl_time_entry_id
+            SELECT ts_utc, start_ts_utc, end_ts_utc, description, toggl_time_entry_id, fingerprint
             FROM applied_entries
             WHERE ts_utc >= ?
             ORDER BY ts_utc DESC
@@ -43,7 +44,7 @@ def list_applied(
     else:
         cur = conn.execute(
             """
-            SELECT ts_utc, start_ts_utc, end_ts_utc, description, toggl_time_entry_id
+            SELECT ts_utc, start_ts_utc, end_ts_utc, description, toggl_time_entry_id, fingerprint
             FROM applied_entries
             ORDER BY ts_utc DESC
             LIMIT ?
@@ -62,6 +63,7 @@ def list_applied(
                 toggl_time_entry_id=(
                     int(r["toggl_time_entry_id"]) if r["toggl_time_entry_id"] is not None else None
                 ),
+                fingerprint=str(r["fingerprint"]),
             )
         )
     return out

@@ -341,6 +341,11 @@ def ledger_list(
         help="Only show entries applied since this UTC date (YYYY-MM-DD)",
     ),
     limit: int = typer.Option(50, "--limit", help="Max rows to show"),  # noqa: B008
+    show_fingerprint: bool = typer.Option(
+        False,
+        "--show-fingerprint",
+        help="Include the idempotency fingerprint in output",
+    ),  # noqa: B008
 ) -> None:
     """List applied time entries (local idempotency ledger)."""
     conn = db_mod.connect(db)
@@ -351,8 +356,9 @@ def ledger_list(
 
     for r in rows:
         te_id = r.toggl_time_entry_id if r.toggl_time_entry_id is not None else "-"
+        fp = f" fp={r.fingerprint}" if show_fingerprint else ""
         typer.echo(
-            f"{r.ts_utc} | {r.start_ts_utc} → {r.end_ts_utc} | id={te_id} | {r.description}"
+            f"{r.ts_utc} | {r.start_ts_utc} → {r.end_ts_utc} | id={te_id} | {r.description}{fp}"
         )
 
 

@@ -59,6 +59,19 @@ def test_ledger_list_limit_and_since(tmp_path: Path) -> None:
     assert "| id=102 | B" not in res.stdout
 
 
+def test_ledger_list_show_fingerprint(tmp_path: Path) -> None:
+    db_path = tmp_path / "test.sqlite"
+    _seed_ledger(db_path)
+
+    runner = CliRunner()
+    res = runner.invoke(
+        get_command(cli.app),
+        ["ledger", "list", "--db", str(db_path), "--limit", "1", "--show-fingerprint"],
+    )
+    assert res.exit_code == 0
+    assert "fp=" in res.stdout
+
+
 def test_ledger_stats_smoke(tmp_path: Path) -> None:
     db_path = tmp_path / "test.sqlite"
     _seed_ledger(db_path)
