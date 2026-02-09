@@ -339,14 +339,29 @@ def day(
     ),
     db: Path = typer.Option(default_db_path, "--db", help="SQLite DB path"),  # noqa: B008
     out: str = typer.Option(
-        "reviewed_timesheet.json",
+        "",
         "--out",
-        help="Where to write reviewed blocks JSON",
+        help="Where to write reviewed blocks JSON (default: reviewed_<date>.json)",
     ),  # noqa: B008
     accept_all: bool = typer.Option(
         False,
         "--accept-all",
         help="Accept all blocks without prompting (non-interactive)",
+    ),  # noqa: B008
+    idle_threshold_ms: int = typer.Option(
+        60_000,
+        "--idle-threshold-ms",
+        help="Treat samples as idle if idle_ms >= this",
+    ),  # noqa: B008
+    merge: bool = typer.Option(
+        False,
+        "--merge",
+        help="Merge adjacent identical blocks before writing/applying",
+    ),  # noqa: B008
+    merge_gap_seconds: int = typer.Option(
+        60,
+        "--merge-gap-seconds",
+        help="Merge blocks if gap between them <= this (when --merge is set)",
     ),  # noqa: B008
     config: str = typer.Option(
         "",
@@ -391,10 +406,15 @@ def day(
     finally:
         conn.close()
 
-    blocks = summarise_blocks(samples, tabs)
+    blocks = summarise_blocks(samples, tabs, idle_threshold_ms=idle_threshold_ms)
     reviewed = blocks if accept_all else interactive_review(blocks)
-    write_reviewed_json(out, reviewed)
-    typer.echo(f"wrote {out} ({len(reviewed)} accepted block(s))")
+
+    if merge:
+        reviewed = merge_adjacent_blocks(reviewed, gap_seconds=merge_gap_seconds)
+
+    out_path = out or f"reviewed_{date}.json"
+    write_reviewed_json(out_path, reviewed)
+    typer.echo(f"wrote {out_path} ({len(reviewed)} accepted block(s))")
 
     mapping = load_mapping(Path(config) if config else None)
     plan = build_plan(reviewed, project_ids=mapping.project_ids, tag_map=mapping.tag_map)

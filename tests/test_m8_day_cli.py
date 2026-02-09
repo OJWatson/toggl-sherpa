@@ -27,29 +27,28 @@ def _seed_samples(db_path: Path) -> None:
     conn.close()
 
 
-def test_day_dry_run_accept_all_writes_reviewed(tmp_path: Path) -> None:
+def test_day_dry_run_accept_all_writes_reviewed_default_name(tmp_path: Path) -> None:
     db_path = tmp_path / "test.sqlite"
-    out_path = tmp_path / "reviewed.json"
     _seed_samples(db_path)
 
     runner = CliRunner()
-    res = runner.invoke(
-        get_command(cli.app),
-        [
-            "day",
-            "--date",
-            "2026-02-09",
-            "--db",
-            str(db_path),
-            "--out",
-            str(out_path),
-            "--accept-all",
-        ],
-    )
+    with runner.isolated_filesystem():
+        res = runner.invoke(
+            get_command(cli.app),
+            [
+                "day",
+                "--date",
+                "2026-02-09",
+                "--db",
+                str(db_path),
+                "--accept-all",
+            ],
+        )
 
-    assert res.exit_code == 0
-    assert out_path.exists()
-    assert "dry-run" in res.stdout
+        assert res.exit_code == 0
+        assert Path("reviewed_2026-02-09.json").exists()
+        assert "wrote reviewed_2026-02-09.json" in res.stdout
+        assert "dry-run" in res.stdout
 
 
 def test_day_yes_posts_with_mock(monkeypatch, tmp_path: Path) -> None:
@@ -91,6 +90,7 @@ def test_day_yes_posts_with_mock(monkeypatch, tmp_path: Path) -> None:
             "--out",
             str(out_path),
             "--accept-all",
+            "--merge",
             "--yes",
         ],
     )
