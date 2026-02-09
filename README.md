@@ -18,9 +18,12 @@ uv run toggl-sherpa ledger stats
 uv run toggl-sherpa report review --date 2026-02-09 --out reviewed_timesheet.json --out-dir ./artifacts
 
 # To actually create entries in Toggl Track, you must pass --yes and set env:
-export TOGGL_API_TOKEN=...
-export TOGGL_WORKSPACE_ID=123456
+export TOGGL_API_TOKEN=...            # Toggl Track API token
+export TOGGL_WORKSPACE_ID=123456      # workspace id
 uv run toggl-sherpa apply --reviewed reviewed_timesheet.json --yes
+
+# Debug helper:
+uv run toggl-sherpa config show
 ```
 
 ## Milestone 1 (M1): GNOME focus + idle logger

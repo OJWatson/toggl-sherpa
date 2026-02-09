@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 
@@ -30,7 +31,7 @@ from toggl_sherpa.m5.apply import (
     load_config_from_env,
     print_plan,
 )
-from toggl_sherpa.m6.config import load_mapping
+from toggl_sherpa.m6.config import default_config_path, load_mapping
 from toggl_sherpa.m6.ledger import list_applied
 from toggl_sherpa.m6.ledger import stats as ledger_stats
 
@@ -39,10 +40,12 @@ log_app = typer.Typer(add_completion=False, no_args_is_help=True)
 web_app = typer.Typer(add_completion=False, no_args_is_help=True)
 report_app = typer.Typer(add_completion=False, no_args_is_help=True)
 ledger_app = typer.Typer(add_completion=False, no_args_is_help=True)
+config_app = typer.Typer(add_completion=False, no_args_is_help=True)
 app.add_typer(log_app, name="log")
 app.add_typer(web_app, name="web")
 app.add_typer(report_app, name="report")
 app.add_typer(ledger_app, name="ledger")
+app.add_typer(config_app, name="config")
 
 
 @app.callback()
@@ -507,6 +510,21 @@ def ledger_stats_cmd(
     typer.echo(f"min_ts_utc: {s.min_ts_utc or '-'}")
     typer.echo(f"max_ts_utc: {s.max_ts_utc or '-'}")
     typer.echo(f"unique_time_entry_ids: {s.unique_time_entry_ids}")
+
+
+@config_app.command("show")
+def config_show() -> None:
+    """Show resolved config paths and relevant env var status."""
+    db = default_db_path()
+    cfg = default_config_path()
+
+    tok = os.environ.get("TOGGL_API_TOKEN")
+    wid = os.environ.get("TOGGL_WORKSPACE_ID")
+
+    typer.echo(f"db_path: {db}")
+    typer.echo(f"config_path: {cfg}")
+    typer.echo(f"TOGGL_API_TOKEN: {'set' if tok else 'missing'}")
+    typer.echo(f"TOGGL_WORKSPACE_ID: {'set' if wid else 'missing'}")
 
 
 def main() -> None:
