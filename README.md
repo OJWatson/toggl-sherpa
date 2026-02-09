@@ -62,6 +62,25 @@ uv run toggl-sherpa report apply --in merged_timesheet.json --out toggl_import.c
 
 ## Milestone 5 (M5): Apply to Toggl Track (explicit approval gate)
 
+### Idempotency ledger (what it is)
+
+When you run `toggl-sherpa apply --yes`, toggl-sherpa writes a local *applied ledger* into the same SQLite DB.
+This is used to make `apply` **idempotent** by default: re-running `apply` with the same reviewed blocks will skip entries that were already created.
+
+Audit commands:
+
+```bash
+# List recently applied entries (most recent first)
+uv run toggl-sherpa ledger list --limit 20
+
+# List entries applied since a UTC date
+uv run toggl-sherpa ledger list --since 2026-02-09 --limit 200
+
+# Summary stats
+uv run toggl-sherpa ledger stats
+uv run toggl-sherpa ledger stats --since 2026-02-09
+```
+
 ```bash
 # Dry run (default)
 uv run toggl-sherpa apply --reviewed reviewed_timesheet.json
