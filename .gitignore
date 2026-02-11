@@ -7,6 +7,3 @@ __pycache__/
 *.sqlite
 *.db
 cache/
-
-# OpenClaw local status (do not commit)
-.openclaw/
