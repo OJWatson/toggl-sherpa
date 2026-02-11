@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M24
 state: paused
-headSha: a4e703a17432e072576f7be9543b9b9e3b9e5bf6
-ciRunUrl: https://github.com/OJWatson/toggl-sherpa/actions/runs/21916501332
-updatedAtUtc: 2026-02-11T17:57:21Z
+headSha: b63131499d82e7eff0d51bff4e7f433770043c37
+ciRunUrl: https://github.com/OJWatson/toggl-sherpa/actions/runs/21916707289
+updatedAtUtc: 2026-02-11T18:05:13Z
 ```
 
 - No action until requested.
